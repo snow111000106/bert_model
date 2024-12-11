@@ -1,25 +1,32 @@
 class ListNode:
-    def __init__(self, value=0, next=None):
-        self.value = value
+    def __init__(self, val=0, next=None):
+        self.val = val
         self.next = next
 
 
-def create_linked_list(values):
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def create_linked_list(vals):
     dummy = ListNode()
     current = dummy
-    for value in values:
-        current.next = ListNode(value)
+    for val in vals:
+        current.next = ListNode(val)
         current = current.next
     return dummy.next
 
 
 def print_linked_list(head):
     current = head
-    values = []
+    vals = []
     while current:  # 遍历链表直到末尾
-        values.append(current.value)  # 将当前节点的值加入列表
+        vals.append(current.val)  # 将当前节点的值加入列表
         current = current.next       # 移动到下一个节点
-    print(" -> ".join(map(str, values)))
+    print(" -> ".join(map(str, vals)))
 
 
 def my_code_1(a, target):
@@ -146,7 +153,7 @@ def my_code_21(l1,l2):
         elif not current_l2:
             current.next = current_l1
             break
-        elif current_l1.value <= current_l2.value:
+        elif current_l1.val <= current_l2.val:
             current.next = current_l1
             current_l1 = current_l1.next
         else:
@@ -276,12 +283,143 @@ def my_code_67(a, b):
     return res
 
 
+def my_code_69(x):
+    """x的平方根"""
+    n = 0
+    while n*n <= x:
+        n += 1
+    return n-1
+
+
+def my_code_69_2(x):
+    """x的平方根-解法2"""
+    l = 0
+    r = x
+    a = 0
+    while l <= r:
+        mid = (l+r)//2
+        if mid * mid <= x:
+            a = mid
+            l = mid + 1
+        else:
+            r = mid - 1
+    return a
+
+
+def math_a(n):
+    p = 1
+    for i in range(1, n+1):
+        p *= i
+    return p
+
+
+def math_comb(m, n):
+    ans = math_a(m) // (math_a(m-n)*math_a(n))
+    return ans
+
+
+def my_code_70(x):
+    """爬楼梯-组合解法"""
+    i = 1
+    count = 1
+    while i <= x:
+        if 2*i > x:
+            break
+        elif 2*i == x:
+            count = count + 1
+            break
+        else:
+            count = count+math_comb(x-i, i)
+            i += 1
+    return count
+
+
+def my_code_70_2(n):
+    """爬楼梯-斐波那契数列"""
+    p = 0
+    q = 1
+    s = 1
+    for i in range(1, n+1):
+        s = p+q
+        p = q
+        q = s
+    return s
+
+
+def my_code_83(head):
+    """删除排序链表中的重复值"""
+    if not head:  # 如果链表为空，直接返回
+        return None
+    current = head
+    while current.next:
+        if current.val == current.next.val:
+            current.next = current.next.next
+        else:
+            current = current.next
+
+    return head
+
+
+def my_code_88(nums1, m, nums2, n):
+    """合并两个有序数组"""
+    for i in range(n):
+        nums1.insert(m+i, nums2[i])
+        nums1.pop()
+    nums1.sort()
+    print(f'nums1:{nums1}')
+
+
+def my_code_88_2(nums1, m, nums2, n):
+    """合并两个有序数组-解法2"""
+    p1 = m - 1  # nums1 中有效元素的最后一个索引
+    p2 = n - 1  # nums2 中的最后一个索引
+    p = m + n - 1  # nums1 最后位置的索引（合并后的最终长度）
+
+    # 从后往前遍历，将较大的元素放在 nums1 的最后
+    while p1 >= 0 and p2 >= 0:
+        if nums1[p1] > nums2[p2]:
+            nums1[p] = nums1[p1]
+            p1 -= 1
+        else:
+            nums1[p] = nums2[p2]
+            p2 -= 1
+        p -= 1
+
+    # 如果 nums2 中还有剩余元素，将其填入 nums1
+    while p2 >= 0:
+        nums1[p] = nums2[p2]
+        p2 -= 1
+        p -= 1
+
+    print(f'nums1:{nums1}')
+
+
+def my_code_94(root):
+    """二叉树的中序遍历"""
+    if not root:
+        return []
+    rest = []
+    rest.extend(my_code_94(root.left))
+    rest.append(root.val)
+    rest.extend(my_code_94(root.right))
+    return rest
+
+
 if __name__ == '__main__':
-    aa = '110010101111'
-    bb = '11110111'
-    re = my_code_67(aa,bb)
-    print(re)
-    # l1 = create_linked_list([0])
+    # aa = [-1,0,2,3,0,0,0]
+    # bb = [-1,2,3]
+    # mm, nn = 4, 3
+    root = TreeNode(1)  # 树的根节点
+    root.left = TreeNode(2)  # 根的左子树
+    root.right = TreeNode(3)  # 根的右子树
+    root.left.left = TreeNode(4)  # 左子树的左子树
+    root.left.right = TreeNode(5)  # 左子树的右子树
+    root.right.left = TreeNode(6)  # 右子树的左子树
+    root.right.right = TreeNode(7)  # 右子树的右子树
+    r = my_code_94(root)
+    print(r)
+    # print_linked_list(re)
+    l1 = create_linked_list([0])
     # l2 = create_linked_list([0])
     # re = my_code_21(l1, l2)
     # print_linked_list(re)
