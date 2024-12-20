@@ -1,3 +1,4 @@
+
 class ListNode:
     def __init__(self, val=0, next=None):
         self.val = val
@@ -405,21 +406,161 @@ def my_code_94(root):
     return rest
 
 
+def my_code_100(p, q):
+    """相同的树"""
+    if p and q:
+        if p.val != q.val:
+            return False
+        if my_code_100(p.right, q.right) and my_code_100(p.left, q.left):
+            return True
+        else:
+            return False
+    elif not p and not q:
+        return True
+    else:
+        return False
+
+
+def my_code_100_2(p, q):
+    """相同的树-简化版本"""
+    if not p and not q:
+        return True
+    if not p or not q or p.val != q.val:
+        return False
+    return my_code_100(p.left, q.left) and my_code_100(p.right, q.right)
+
+
+def my_code_101(root):
+    """对称二叉树"""
+    if not root:
+        return True
+
+    def is_mirror(r,l):
+        """左子树和右子树是否对称"""
+        if not r and not l:
+            return True
+        if not r or not l:
+            return False
+        return r.val == l.val and is_mirror(r.right, l.left) and is_mirror(r.left, l.right)
+
+    return is_mirror(root.right, root.left)
+
+
+def my_code_104(root):
+    """二叉树的最大深度"""
+    if not root:
+        return 0
+    left_depth = my_code_104(root.left)
+    right_depth = my_code_104(root.right)
+
+    return max(left_depth, right_depth) + 1
+
+
+def print_tree(root, level=0):
+    """递归打印二叉树的结构"""
+    if not root:
+        return
+    # 打印右子树
+    print_tree(root.right, level + 1)
+    # 打印当前节点
+    print(" " * 4 * level + "->", root.val)
+    # 打印左子树
+    print_tree(root.left, level + 1)
+
+
+def my_code_108(nums: list[int]) -> TreeNode:
+    """将有序数组转换为平衡二叉搜索树"""
+
+    def write_value(left, right):
+        if left > right:
+            return None
+        mid = (right+left)//2
+        root = TreeNode(nums[mid])
+
+        root.left = write_value(left, mid-1)
+        root.right = write_value(mid + 1, right)
+        return root
+
+    return write_value(0, len(nums)-1)
+
+
+def my_code_110(root) -> bool:
+    """判断是否是平衡二叉树-自下而上"""
+
+    def check_balance(node: TreeNode):
+        if not node:
+            return 0  # 空树的高度是 0
+
+        left_height = check_balance(node.left)
+        if left_height == -1:  # 左子树不平衡
+            return -1
+
+        right_height = check_balance(node.right)
+        if right_height == -1:  # 右子树不平衡
+            return -1
+
+        # 如果左右子树的高度差大于 1，返回 -1
+        if abs(left_height - right_height) > 1:
+            return -1
+
+        # 返回当前树的高度
+        return max(left_height, right_height) + 1
+
+    # 如果返回值是 -1，说明树不平衡
+    return check_balance(root) != -1
+
+
+def my_code_111(root):
+    """二叉树最小深度"""
+    if not root:
+        return 0
+    if not root.left and not root.right:
+        return 1
+    if root.right and root.left:
+        r = my_code_111(root.right)
+        l = my_code_111(root.left)
+        return min(l, r) + 1
+    elif root.right:
+        r = my_code_111(root.right)
+        return r+1
+    elif root.left:
+        r = my_code_111(root.left)
+        return r+1
+
+
+def my_code_112(root, targetSum):
+    """路径总和"""
+    if not root:
+        return False
+    def sumRe(nood, a):
+        if not nood:
+            return False
+        if not nood.right and not nood.left and a-nood.val == 0:
+            return True
+        return sumRe(nood.left, a-nood.val) or sumRe(nood.right, a-nood.val)
+
+    return sumRe(root, targetSum)
+
+
 if __name__ == '__main__':
-    # aa = [-1,0,2,3,0,0,0]
+    # aa = [-1,0,2,3,5,6,9,19]
     # bb = [-1,2,3]
     # mm, nn = 4, 3
-    root = TreeNode(1)  # 树的根节点
-    root.left = TreeNode(2)  # 根的左子树
-    root.right = TreeNode(3)  # 根的右子树
-    root.left.left = TreeNode(4)  # 左子树的左子树
-    root.left.right = TreeNode(5)  # 左子树的右子树
-    root.right.left = TreeNode(6)  # 右子树的左子树
-    root.right.right = TreeNode(7)  # 右子树的右子树
-    r = my_code_94(root)
+    root1 = TreeNode(1)
+    root1.right = TreeNode(2)
+    root1.right.right = TreeNode(4)
+    root1.right.right.right = TreeNode(5)
+    root1.right.right.left = TreeNode(4)
+    root1.right.right.right.right = TreeNode(6)
+    print_tree(root1)
+    r = my_code_112(root1,19)
     print(r)
-    # print_linked_list(re)
-    l1 = create_linked_list([0])
-    # l2 = create_linked_list([0])
-    # re = my_code_21(l1, l2)
-    # print_linked_list(re)
+
+    # a=[2,2,2,'null',2,'null','null',2]
+    # b=[2,2,2,2,'null',2,'null']
+    #
+    # r = my_code_100(root1, root2)
+    # print(r)
+    # # print_linked_list(re)
+    # l1 = create_linked_list([0])
+    # # l2 = create_linked_list([0])
