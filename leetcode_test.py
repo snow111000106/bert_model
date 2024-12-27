@@ -395,17 +395,6 @@ def my_code_88_2(nums1, m, nums2, n):
     print(f'nums1:{nums1}')
 
 
-def my_code_94(root):
-    """二叉树的中序遍历"""
-    if not root:
-        return []
-    rest = []
-    rest.extend(my_code_94(root.left))
-    rest.append(root.val)
-    rest.extend(my_code_94(root.right))
-    return rest
-
-
 def my_code_100(p, q):
     """相同的树"""
     if p and q:
@@ -542,19 +531,166 @@ def my_code_112(root, targetSum):
     return sumRe(root, targetSum)
 
 
+def my_code_118(numRows):
+    """杨辉三角"""
+
+    n = 1
+    res_list = []
+    while n <= numRows:
+        next_list = [1] * n
+        if n >= 3:
+            for i in range(1, n-1):
+                next_list[i] = res_list[-1][i-1]+res_list[-1][i]
+
+        res_list.append(next_list)
+        n += 1
+    return res_list
+
+
+def my_code_119(rowIndex: int):
+    """杨辉三角Ⅱ"""
+    n = 1
+    res_list = []
+    while n <= rowIndex+1:
+        next_list = [1] * n
+        if n >= 3:
+            for i in range(1, n - 1):
+                next_list[i] = res_list[-1][i - 1] + res_list[-1][i]
+
+        res_list.append(next_list)
+        n += 1
+    return res_list[rowIndex]
+
+
+def my_code_121(prices):
+    """买卖股票的最佳时机"""
+    max_a = 0
+    for i in range(len(prices)):
+        v = max(prices[i:])
+        if v > prices[i]:
+            max_v = v - prices[i]
+            if max_v > max_a:
+                max_a = max_v
+    return max_a
+
+
+def my_code_121_2(prices):
+    """买卖股票的最佳时机"""
+    c = prices[0]
+    p = 0
+    for i in prices:
+        c = min(c, i)
+        p = max(p, i-c)
+    return p
+
+
+def my_code_125(s: str):
+    """验证回文串"""
+    import re
+    s = s.lower()
+    s_list = re.findall(r'[a-zA-Z0-9]', s)
+    for i in range(1, len(s_list) // 2+1):
+        if s_list[i-1] != s_list[-i]:
+            return False
+    return True
+
+
+def my_code_136(nums: list[int]) -> int:
+    """只出现一次的数字"""
+    new = [nums[0]]
+    for num in nums[1:]:
+        if num in new:
+            new.remove(num)
+        else:
+            new.append(num)
+    return new[0]
+
+
+def my_code_141(head: ListNode) -> bool:
+    """环形链表"""
+    seen = set()
+    while head:
+        if head in seen:
+            return False
+        seen.add(head)
+        head = head.next
+    return True
+
+
+def my_code_144(root: TreeNode) -> list:
+    """二叉树的前序遍历中-左-右"""
+    new_list = []
+    def test(node):
+        if not node:
+            return
+        new_list.append(node.val)
+        test(node.left)
+        test(node.right)
+    test(root)
+    return new_list
+
+
+def my_code_94(root):
+    """二叉树的中序遍历左-中-右"""
+    if not root:
+        return []
+    rest = []
+    rest.extend(my_code_94(root.left))
+    rest.append(root.val)
+    rest.extend(my_code_94(root.right))
+    return rest
+
+
+def my_code_145(root: TreeNode) -> list:
+    """二叉树的后序遍历,左-右-中"""
+    new_list = []
+    def test(node: TreeNode):
+        if not node:
+            return
+        test(node.left)
+        test(node.right)
+        new_list.append(node.val)
+    test(root)
+    return new_list
+
+
+def my_code_160(headA:ListNode, headB: ListNode):
+    """相交链表"""
+    l_a = []
+    l_b = []
+    while headA:
+        l_a.append(headA.val)
+        headA = headA.next
+    while headB:
+        l_b.append(headB.val)
+        headB = headB.next
+    count = len(l_a)
+    if len(l_b) > len(l_a):
+        count = len(l_b)
+    for i in range(1, count):
+        if l_a[-i] == l_b[-i]:
+            print(l_a[-i])
+
+
 if __name__ == '__main__':
-    # aa = [-1,0,2,3,5,6,9,19]
+    a = create_linked_list([4, 1, 8, 4, 5])
+    b = create_linked_list([5, 6, 1, 8, 4, 5])
+    # print_linked_list(a)
+    # print_linked_list(b)
+    r = my_code_160(a,b)
+    print_linked_list(r)
     # bb = [-1,2,3]
     # mm, nn = 4, 3
-    root1 = TreeNode(1)
-    root1.right = TreeNode(2)
-    root1.right.right = TreeNode(4)
-    root1.right.right.right = TreeNode(5)
-    root1.right.right.left = TreeNode(4)
-    root1.right.right.right.right = TreeNode(6)
-    print_tree(root1)
-    r = my_code_112(root1,19)
-    print(r)
+    # root1 = TreeNode(1)
+    # root1.right = TreeNode(2)
+    # root1.right.right = TreeNode(4)
+    # root1.right.right.right = TreeNode(5)
+    # root1.right.right.left = TreeNode(4)
+    # root1.right.right.right.right = TreeNode(6)
+    # print_tree(root1)
+    # print('结果')
+    # r = my_code_145(root1)
+    # print(r)
 
     # a=[2,2,2,'null',2,'null','null',2]
     # b=[2,2,2,2,'null',2,'null']
@@ -563,4 +699,4 @@ if __name__ == '__main__':
     # print(r)
     # # print_linked_list(re)
     # l1 = create_linked_list([0])
-    # # l2 = create_linked_list([0])
+    # l2 = create_linked_list([0])
