@@ -674,9 +674,9 @@ def my_code_160_test(a:ListNode,b:ListNode):
     return aa,bb
 
 
-def my_code_160(headA:ListNode, headB: ListNode):
+def my_code_160(headA: ListNode, headB: ListNode):
     """相交链表"""
-    a,b = headA,headB
+    a, b = headA, headB
     while a and b:
         if a == b:
             return a
@@ -712,18 +712,6 @@ def my_code_169(nums: list[int]) -> int:
             new_dict.update({i: new_dict[i]+1})
     new_dict = sorted(new_dict.items(), reverse=True, key=lambda d:d[1])
     return new_dict[0][0]
-    m,n =a,b
-    while m and n:
-        if m == n:
-            return m
-        m = m.next
-        n = n.next
-        if not m and not n:
-            return
-        if not m:
-            m = b
-        if not n:
-            n = a
 
 
 def my_code_171(columnTitle:str) -> int:
@@ -743,7 +731,7 @@ def my_code_171(columnTitle:str) -> int:
     return s
 
 
-def my_code_190(n:integer):
+def my_code_190(n: integer):
     """颠倒二进制位"""
     new = list(bin(n)[2:])
     y = ['0'] * (32 - len(new))
@@ -756,7 +744,7 @@ def my_code_190(n:integer):
     return int(''.join(y),2)
 
 
-def my_code_191(n:int) -> int:
+def my_code_191(n: int) -> int:
     """位1的个数"""
     new = list(bin(n)[2:])
     count = 0
@@ -765,10 +753,11 @@ def my_code_191(n:int) -> int:
             count +=1
     return count
 
+
 def my_code_202(n: int) -> bool:
     """快乐数"""
     new = set()
-    while n !=1:
+    while n != 1:
         sum = 0
         for i in list(str(n)):
             print(i)
@@ -780,7 +769,7 @@ def my_code_202(n: int) -> bool:
     return True
 
 
-def my_code_203(head:ListNode, val:int):
+def my_code_203(head: ListNode, val: int):
     """移除链表元素"""
     new = ListNode(0)
     current = new
@@ -794,7 +783,7 @@ def my_code_203(head:ListNode, val:int):
     return current.next
 
 
-def my_code_203_2(head:ListNode, val:int):
+def my_code_203_2(head: ListNode, val: int):
     """移除链表元素"""
     if not head:
         return None
@@ -810,9 +799,10 @@ def my_code_203_2(head:ListNode, val:int):
         return head
 
 
-def my_code_205(s :str,t:str) -> bool:
+def my_code_205(s: str, t: str) -> bool:
     """同构字符串"""
     pass
+
 
 if __name__ == '__main__':
     # a = 8
