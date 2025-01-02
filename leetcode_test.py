@@ -656,30 +656,54 @@ def my_code_145(root: TreeNode) -> list:
 
 def my_code_160(headA:ListNode, headB: ListNode):
     """相交链表"""
-    l_a = []
-    l_b = []
-    while headA:
-        l_a.append(headA.val)
-        headA = headA.next
-    while headB:
-        l_b.append(headB.val)
-        headB = headB.next
-    count = len(l_a)
-    if len(l_b) > len(l_a):
-        count = len(l_b)
-    for i in range(1, count):
-        if l_a[-i] == l_b[-i]:
-            print(l_a[-i])
+    a,b = headA,headB
+    while a and b:
+        if a == b:
+            return a
+        a = a.next
+        b = b.next
+        if not a and not b:
+            return
+        if not a:
+            a = headB
+        if not b:
+            b = headA
+
+
+def my_code_168(columnNumber:int) -> str:
+    """Excel表列名称"""
+    new = []
+    map_word = {i: chr(65 + i) for i in range(0, 26)}
+    while columnNumber > 0:
+        columnNumber -= 1
+        new.insert(0, map_word[columnNumber%26])
+        columnNumber //= 26
+    return ''.join(new)
+
+
+def my_code_169(nums: list[int]) -> int:
+    """多数元素"""
+    new_dict = {}
+    for i in nums:
+        k = new_dict.get(i)
+        if k is None:
+            new_dict.update({i: 1})
+        else:
+            new_dict.update({i: new_dict[i]+1})
+    new_dict = sorted(new_dict.items(), reverse=True, key=lambda d:d[1])
+    return new_dict[0][0]
 
 
 if __name__ == '__main__':
-    a = create_linked_list([4, 1, 8, 4, 5])
-    b = create_linked_list([5, 6, 1, 8, 4, 5])
+    # a = create_linked_list([4, 1, 8, 4, 5])
+    # b = create_linked_list([5, 6, 1, 8, 4, 5])
     # print_linked_list(a)
     # print_linked_list(b)
-    r = my_code_160(a,b)
-    print_linked_list(r)
-    # bb = [-1,2,3]
+    # r = my_code_160(a,b)
+    # print_linked_list(r)
+    bb = [1,2,3,3,2,2,2,2,1,3]
+    r = my_code_169(bb)
+    print(r)
     # mm, nn = 4, 3
     # root1 = TreeNode(1)
     # root1.right = TreeNode(2)
