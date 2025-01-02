@@ -1,3 +1,5 @@
+from sympy.codegen.ast import integer
+
 
 class ListNode:
     def __init__(self, val=0, next=None):
@@ -654,6 +656,24 @@ def my_code_145(root: TreeNode) -> list:
     return new_list
 
 
+def my_code_160_test(a:ListNode,b:ListNode):
+    c = create_linked_list([8,4,5])
+    aa = a
+    bb = b
+
+    while a:
+        a = a.next
+        if not a.next:
+            a.next = c
+            break
+    while b:
+        b = b.next
+        if not b.next:
+            b.next = c
+            break
+    return aa,bb
+
+
 def my_code_160(headA:ListNode, headB: ListNode):
     """相交链表"""
     a,b = headA,headB
@@ -692,18 +712,118 @@ def my_code_169(nums: list[int]) -> int:
             new_dict.update({i: new_dict[i]+1})
     new_dict = sorted(new_dict.items(), reverse=True, key=lambda d:d[1])
     return new_dict[0][0]
+    m,n =a,b
+    while m and n:
+        if m == n:
+            return m
+        m = m.next
+        n = n.next
+        if not m and not n:
+            return
+        if not m:
+            m = b
+        if not n:
+            n = a
 
+
+def my_code_171(columnTitle:str) -> int:
+    """excel表列序号"""
+    word_dict = {chr(i+64):i for i in range(1,27)}
+    s = 0
+    def counts(num, n):
+        y = 1
+        while n > 0:
+            y *= 26
+            n -= 1
+        return y*num
+    l = len(columnTitle)
+    for i in columnTitle:
+        s += counts(word_dict[i], l-1)
+        l -= 1
+    return s
+
+
+def my_code_190(n:integer):
+    """颠倒二进制位"""
+    new = list(bin(n)[2:])
+    y = ['0'] * (32 - len(new))
+    if len(new) <= 32:
+        y.extend(new)
+    for i in range(1,17):
+        x = y[i-1]
+        y[i-1] = y[-i]
+        y[-i] = x
+    return int(''.join(y),2)
+
+
+def my_code_191(n:int) -> int:
+    """位1的个数"""
+    new = list(bin(n)[2:])
+    count = 0
+    for i in new:
+        if i == '1':
+            count +=1
+    return count
+
+def my_code_202(n: int) -> bool:
+    """快乐数"""
+    new = set()
+    while n !=1:
+        sum = 0
+        for i in list(str(n)):
+            print(i)
+            sum += int(i)**2
+        if sum in new:
+            return False
+        new.add(sum)
+        n = sum
+    return True
+
+
+def my_code_203(head:ListNode, val:int):
+    """移除链表元素"""
+    new = ListNode(0)
+    current = new
+    current.next = head
+    a = current
+    while a.next:
+        if a.next.val == val:
+            a.next = a.next.next
+        else:
+            a = a.next
+    return current.next
+
+
+def my_code_203_2(head:ListNode, val:int):
+    """移除链表元素"""
+    if not head:
+        return None
+    a = head
+    while a.next:
+        if a.next.val == val:
+            a.next = a.next.next
+        else:
+            a = a.next
+    if head.val == val:
+        return head.next
+    else:
+        return head
+
+
+def my_code_205(s :str,t:str) -> bool:
+    """同构字符串"""
+    pass
 
 if __name__ == '__main__':
-    # a = create_linked_list([4, 1, 8, 4, 5])
-    # b = create_linked_list([5, 6, 1, 8, 4, 5])
-    # print_linked_list(a)
-    # print_linked_list(b)
-    # r = my_code_160(a,b)
-    # print_linked_list(r)
-    bb = [1,2,3,3,2,2,2,2,1,3]
-    r = my_code_169(bb)
-    print(r)
+    # a = 8
+    # r = my_code_202(a)
+    # print(r)
+    # a = create_linked_list([4, 1])
+    b = create_linked_list([6,6,1,2])
+    # ac,bc = my_code_160_test(a,b)
+    r = my_code_203_2(b,6)
+    print_linked_list(r)
+    # bb = [-1,2,3]
     # mm, nn = 4, 3
     # root1 = TreeNode(1)
     # root1.right = TreeNode(2)
