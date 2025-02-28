@@ -1,0 +1,9 @@
+llama_stack==0.1.5
+numpy==2.2.3
+pandas==2.2.3
+Requests==2.32.3
+scikit_learn==1.6.1
+sympy==1.13.1
+torch==2.6.0
+tqdm==4.65.0
+transformers==4.44.0

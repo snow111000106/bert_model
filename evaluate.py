@@ -6,9 +6,8 @@
 import torch
 from dateset import MyDataset, SentimentDataset
 import numpy as np
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
 
 def evaluate(model, test_data):
@@ -94,32 +93,61 @@ def evaluate(model, test_data):
     # plt.show()
 
 
-def evaluate_moon(model,  test_data):
+def evaluate_moon(model, test_data):
+    """
+    对模型在测试集上的表现进行评估，计算准确率、混淆矩阵、精确率、召回率和F1分数。
+    这里使用 SentimentDataset 以保持与训练过程的一致性。
+    """
+    # 使用 SentimentDataset 构造测试数据集
+    test_dataset = SentimentDataset(test_data)
+    # 创建 DataLoader，batch_size 设置为2
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=2)
 
-    test = SentimentDataset(test_data)
-    test_dataloader = torch.utils.data.DataLoader(test, batch_size=2)
+    # 判断是否有可用的GPU，否则使用CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
 
-    model.eval()
+    total_acc_test = 0  # 用于累计预测正确的样本数量
+    y_true = []  # 存储所有真实标签
+    y_scores = []  # 存储预测为正类的概率（用于后续评价指标计算）
+    y_preds = []  # 存储模型的预测类别
 
-    all_preds = []
-    all_labels = []
+    # 在不计算梯度的环境下进行评估，加快速度并节省内存
+    with torch.no_grad():
+        # 使用 tqdm 显示评估进度
+        for batch in tqdm(test_dataloader, desc="Evaluating"):
+            # 从batch中获取input_ids、attention_mask和标签，并移动到设备上
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['label'].to(device)
 
-    for batch in test_dataloader:
-        input_ids = batch['input_ids'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        labels = batch['label'].to(device)
+            # 模型前向传播，获得输出结果
+            output = model(input_ids, attention_mask)
 
-        with torch.no_grad():
-            outputs = model(input_ids)
+            # 计算当前batch预测正确的样本数，并累加到总数中
+            correct = (output.argmax(dim=1) == labels).sum().item()
+            total_acc_test += correct
 
-        preds = torch.argmax(outputs, dim=1)
-        all_preds.extend(preds.cpu().numpy())
-        all_labels.extend(labels.cpu().numpy())
+            # 使用 softmax 将输出转换为概率，并获取正类的概率（假设正类在索引1处）
+            probs = torch.softmax(output, dim=1)[:, 1].cpu().numpy()
+            # 将概率、真实标签和预测结果加入到对应列表中
+            y_scores.extend(probs.tolist())
+            y_true.extend(labels.cpu().numpy().tolist())
+            y_preds.extend(output.argmax(dim=1).cpu().numpy().tolist())
 
-    accuracy = accuracy_score(all_labels, all_preds)
-    print(f'Accuracy: {accuracy:.4f}')
+    # 计算测试集的总体准确率（正确预测的样本数 / 测试集样本总数）
+    test_accuracy = total_acc_test / len(test_dataset)
+    print(f'Test Accuracy: {test_accuracy:.3f}')
+
+    # 计算混淆矩阵、精确率、召回率和F1分数
+    cm = confusion_matrix(y_true, y_preds)
+    precision = precision_score(y_true, y_preds, average='macro')
+    recall = recall_score(y_true, y_preds, average='macro')
+    f1 = f1_score(y_true, y_preds, average='macro')
+
+    print(f'Confusion Matrix:\n{cm}')
+    print(f'Precision: {precision:.3f}')
+    print(f'Recall: {recall:.3f}')
+    print(f'F1 Score: {f1:.3f}')
 
 
 

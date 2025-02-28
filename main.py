@@ -78,14 +78,14 @@ def run_mon_train(types):
         train_moon(model, df_train, df_val, LR, 2)
 
     elif types == 'evaluate':
-
+        model.load_state_dict(torch.load('./model/test_bert_cnn_moon_model.pth'))
         evaluate_moon(model, df_test)
 
     elif types == 'test':
         # 单个测试
         tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
         model = CNN_BERT_Model(bert_path=BERT_PATH)
-        model.load_state_dict(torch.load('./model/test_bert_pos_neg_model.pth'))
+        model.load_state_dict(torch.load('./model/test_bert_cnn_moon_model.pth'))
         data = '大坏蛋'
         bert_input = tokenizer(data, padding='max_length', max_length=64, truncation=True, return_tensors="pt")
         mask = bert_input['attention_mask'].to('cpu')
@@ -97,7 +97,7 @@ def run_mon_train(types):
 
 if __name__ == '__main__':
 
-    run_mon_train(types='train')
+    run_mon_train(types='evaluate')
 
 
 
