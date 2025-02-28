@@ -7,8 +7,8 @@ import torch
 from torch.optim import Adam
 from torch import nn
 from tqdm import tqdm
-from torch.utils.data import Dataset
-from main import MyDataset
+from transformers import AdamW
+from dateset import MyDataset,SentimentDataset
 
 
 def train(model, train_data, val_data, learning_rate, epochs):
@@ -86,3 +86,73 @@ def train(model, train_data, val_data, learning_rate, epochs):
               | Train Accuracy: {total_acc_train / len(train_data): .3f} 
               | Val Loss: {total_loss_val / len(val_data): .3f} 
               | Val Accuracy: {total_acc_val / len(val_data): .3f}''')
+
+
+def train_moon(model, train_data, val_data, lr, epochs):
+    train_dataset = SentimentDataset(train_data)
+    val_dataset = SentimentDataset(val_data)
+
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=2, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=2)
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+
+    optimizer = AdamW(model.parameters(), lr=lr)
+    criterion = torch.nn.CrossEntropyLoss()
+    best_val_acc = 0
+
+    for epoch in range(epochs):
+        model.train()
+        total_loss_train = 0
+        total_acc_train = 0
+
+        for batch in tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}"):
+            optimizer.zero_grad()
+
+            input_ids = batch['input_ids'].to(device)
+            if input_ids.dim() == 3:
+                input_ids = input_ids.squeeze(1)
+            attention_mask = batch['attention_mask'].to(device)
+            if attention_mask.dim() == 3:
+                attention_mask = attention_mask.squeeze(1)
+            labels = batch['label'].to(device)
+
+            outputs = model(input_ids, attention_mask)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            total_loss_train += loss.item()
+            total_acc_train += (outputs.argmax(dim=1) == labels).sum().item()
+
+        train_loss = total_loss_train / len(train_dataset)
+        train_acc = total_acc_train / len(train_dataset)
+
+        model.eval()
+        total_loss_val = 0
+        total_acc_val = 0
+        with torch.no_grad():
+            for batch in val_dataloader:
+                input_ids = batch['input_ids'].to(device)
+                if input_ids.dim() == 3:
+                    input_ids = input_ids.squeeze(1)
+                attention_mask = batch['attention_mask'].to(device)
+                if attention_mask.dim() == 3:
+                    attention_mask = attention_mask.squeeze(1)
+                labels = batch['label'].to(device)
+
+                outputs = model(input_ids, attention_mask)
+                loss = criterion(outputs, labels)
+                total_loss_val += loss.item()
+                total_acc_val += (outputs.argmax(dim=1) == labels).sum().item()
+
+        val_loss = total_loss_val / len(val_dataset)
+        val_acc = total_acc_val / len(val_dataset)
+
+        if total_acc_val > best_val_acc:
+            best_val_acc = total_acc_val
+            torch.save(model.state_dict(), 'model/test_bert_cnn_moon_model.pth')
+
+        print(f"Epoch: {epoch+1} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc:.3f} | "
+              f"Val Loss: {val_loss:.3f} | Val Acc: {val_acc:.3f}")

@@ -1,6 +1,7 @@
 import pandas as pd
 import random
 
+
 def read_data_txt():
     data = []
     with open('./data/tsinghua.negative.gb.txt', 'r', encoding='gbk') as nf:

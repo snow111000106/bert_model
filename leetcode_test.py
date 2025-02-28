@@ -760,7 +760,6 @@ def my_code_202(n: int) -> bool:
     while n != 1:
         sum = 0
         for i in list(str(n)):
-            print(i)
             sum += int(i)**2
         if sum in new:
             return False
@@ -801,18 +800,84 @@ def my_code_203_2(head: ListNode, val: int):
 
 def my_code_205(s: str, t: str) -> bool:
     """同构字符串"""
-    pass
+    ab = dict()
+    for i in range(len(s)):
+        if s[i] not in ab.keys():
+            ab.update({s[i]: ord(s[i]) - ord(t[i])})
+        else:
+            if ab[s[i]] != ord(s[i]) - ord(t[i]):
+                return False
+    ac = dict()
+    for i in range(len(t)):
+        if t[i] not in ac.keys():
+            ac.update({t[i]: ord(t[i]) - ord(s[i])})
+        else:
+            if ac[t[i]] != ord(t[i]) - ord(s[i]):
+                return False
+    return True
+
+
+def my_code_205_2(s: str, t: str) -> bool:
+    """同构字符串"""
+    ss = [s.index(s[i]) for i in range(len(s))]
+    tt = [t.index(t[i]) for i in range(len(t))]
+    print(ss, tt)
+    return all(s.index(s[i]) == t.index(t[i]) for i in range(len(s)))
+
+
+def my_code_206(head: ListNode) -> ListNode:
+    """反转链表"""
+    a = []
+    while head:
+        a.append(head.val)
+        head = head.next
+    a.reverse()
+    dummy = ListNode()
+    current = dummy
+    for val in a:
+        current.next = ListNode(val)
+        current = current.next
+    print_linked_list(dummy.next)
+    return dummy.next
+
+
+def my_code_217(nums: list[int]) -> bool:
+    """存在重复元素"""
+    a = set()
+    for i in nums:
+        if i in a:
+            return True
+        a.add(i)
+    return False
+
+
+def my_code_219(nums: list[int], k: int) -> bool:
+    """存在重复元素二"""
+    for i, v in enumerate(nums):
+        if i+k >= len(nums):
+            for j in nums[i+1:]:
+                if v == nums[j]:
+                    return True
+        else:
+            for j in nums[i+1:i + k+1]:
+                if v == nums[j]:
+                    return True
+    return False
 
 
 if __name__ == '__main__':
+    a1 = [1,0,1,1]
+    b1 = 1
+    re = my_code_219(a1, b1)
+    print(re)
     # a = 8
     # r = my_code_202(a)
     # print(r)
-    # a = create_linked_list([4, 1])
-    b = create_linked_list([6,6,1,2])
+    #a = create_linked_list([4, 1,3,5,6])
+   # b = create_linked_list([6,6,1,2])
     # ac,bc = my_code_160_test(a,b)
-    r = my_code_203_2(b,6)
-    print_linked_list(r)
+    #r = my_code_206(a)
+   # print_linked_list(r)
     # bb = [-1,2,3]
     # mm, nn = 4, 3
     # root1 = TreeNode(1)

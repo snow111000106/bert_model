@@ -4,27 +4,11 @@
 # @File    : evaluate.py
 
 import torch
-from main import MyDataset
+from dateset import MyDataset, SentimentDataset
 import numpy as np
-from torch.utils.data import Dataset
-from sklearn.metrics import roc_curve, auc, confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-import seaborn as sns
-
-labels = {'login': 0,
-          'creatAccount': 1,
-          'initPassword': 2,
-          'clearAccount': 3,
-          'addSubAccount': 4,
-          'clearCache': 5,
-          'performanceTest': 6,
-          'autoTest': 7,
-          'runTask': 8,
-          'unitTest': 9
-          }
-label_names = list(labels.keys())
+from sklearn.metrics import accuracy_score
 
 
 def evaluate(model, test_data):
@@ -36,8 +20,6 @@ def evaluate(model, test_data):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    if use_cuda:
-        model = model.cuda()
 
     total_acc_test = 0
     y_true = []
@@ -71,6 +53,7 @@ def evaluate(model, test_data):
     print(f'F1 Score: {f1:.3f}')
 
     # # 绘制混淆矩阵
+    # label_names = list(category_label.keys())
     # plt.figure(figsize=(10, 8))
     # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=label_names, yticklabels=label_names)
     # plt.xlabel('Predicted')
@@ -109,5 +92,34 @@ def evaluate(model, test_data):
     # plt.title('Receiver Operating Characteristic')
     # plt.legend(loc="lower right")
     # plt.show()
+
+
+def evaluate_moon(model,  test_data):
+
+    test = SentimentDataset(test_data)
+    test_dataloader = torch.utils.data.DataLoader(test, batch_size=2)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+
+    model.eval()
+
+    all_preds = []
+    all_labels = []
+
+    for batch in test_dataloader:
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        labels = batch['label'].to(device)
+
+        with torch.no_grad():
+            outputs = model(input_ids)
+
+        preds = torch.argmax(outputs, dim=1)
+        all_preds.extend(preds.cpu().numpy())
+        all_labels.extend(labels.cpu().numpy())
+
+    accuracy = accuracy_score(all_labels, all_preds)
+    print(f'Accuracy: {accuracy:.4f}')
+
 
 
