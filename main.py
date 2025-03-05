@@ -75,7 +75,7 @@ def run_mon_train(types):
 
     if types == 'train':
         LR = 1e-6
-        train_moon(model, df_train, df_val, LR, 2)
+        train_moon(model, df_train, LR, 2)
 
     elif types == 'evaluate':
         model.load_state_dict(torch.load('./model/test_bert_cnn_moon_model.pth'))
@@ -83,21 +83,39 @@ def run_mon_train(types):
 
     elif types == 'test':
         # 单个测试
+
         tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
         model = CNN_BERT_Model(bert_path=BERT_PATH)
         model.load_state_dict(torch.load('./model/test_bert_cnn_moon_model.pth'))
-        data = '大坏蛋'
+        data = '这个水果手机的系统很流畅。'
         bert_input = tokenizer(data, padding='max_length', max_length=64, truncation=True, return_tensors="pt")
         mask = bert_input['attention_mask'].to('cpu')
         input_id = bert_input['input_ids'].squeeze(1).to('cpu')
+
         out = model(input_id, mask)
         moon = out.argmax(dim=1).item()
         print(moon)
 
+        # from transformers import BertModel
+        # 词向量查看
+        # tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
+        # model = BertModel.from_pretrained(BERT_PATH)
+        #
+        # # 获取词嵌入矩阵
+        # embeddings = model.embeddings.word_embeddings.weight  # 形状通常为 [vocab_size, hidden_size]
+        # print("词嵌入矩阵的形状：", embeddings.shape)
+        #
+        # # 查看某个 token 的词向量，例如 "苹果"
+        # token = "苹果手机系统好"
+        # token_ids = tokenizer(token, add_special_tokens=False)["input_ids"]
+        # # 如果 token 被拆分成多个子词，可以对它们取平均或者分别查看
+        # for tid in token_ids:
+        #     print(f"Token ID: {tid}, 词向量：", embeddings[tid])
+
 
 if __name__ == '__main__':
 
-    run_mon_train(types='evaluate')
+    run_mon_train(types='test')
 
 
 

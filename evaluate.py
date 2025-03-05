@@ -150,4 +150,30 @@ def evaluate_moon(model, test_data):
     print(f'F1 Score: {f1:.3f}')
 
 
+def evaluate_moon_2(model, test_data):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 选择设备
+    model.to(device)  # 加载模型到设备
+    model.eval()  # 设为评估模式
+
+    test_loader = torch.utils.data.DataLoader(SentimentDataset(test_data), batch_size=2)  # 创建测试数据加载器
+    criterion = torch.nn.CrossEntropyLoss()  # 交叉熵损失函数
+    test_loss, test_correct = 0, 0  # 初始化损失和正确预测计数
+
+    with torch.no_grad():  # 关闭梯度计算
+        for batch in test_loader:
+            input_ids, attention_mask, labels = (
+                batch['input_ids'].squeeze(1).to(device),
+                batch['attention_mask'].squeeze(1).to(device),
+                batch['label'].to(device)
+            )
+
+            outputs = model(input_ids, attention_mask)  # 前向传播
+            test_loss += criterion(outputs, labels).item()  # 计算损失
+            test_correct += (outputs.argmax(dim=1) == labels).sum().item()  # 计算正确预测数
+
+    test_acc = test_correct / len(test_data)  # 计算测试集准确率
+    print(f"Test Loss: {test_loss / len(test_loader):.3f} | Test Acc: {test_acc:.3f}")
+    return test_loss / len(test_loader), test_acc
+
+
 

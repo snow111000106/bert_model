@@ -45,14 +45,25 @@ class CNN_BERT_Model(nn.Module):
     def forward(self, input_ids, attention_mask):
         # 通过BERT模型获取最后一层隐藏状态，输出形状为 [batch_size, seq_length, hidden_size]
         x = self.bert(input_ids, attention_mask=attention_mask)[0]
+        print(x)
+
         # 调整维度顺序，转换为 [batch_size, hidden_size, seq_length]，以便后续进行1D卷积
         x = x.permute(0, 2, 1)
+        print(x)
         # 通过1维卷积层提取局部特征，输出形状为 [batch_size, 256, L] (L取决于序列长度和卷积核大小)
         x = self.conv1(x)
+        print(x)
+
         # 采用全局最大池化，在序列维度上取最大值，得到形状 [batch_size, 256]
         x = torch.max(x, dim=2)[0]
+        print(x)
+
         # 对池化后的特征应用Dropout
         x = self.dropout(x)
+        print(x)
+
         # 通过全连接层得到最终的分类输出
         x = self.fc(x)
+        print(x)
+
         return x

@@ -175,3 +175,27 @@ def train_moon(model, train_data, val_data, lr, epochs):
         # 打印当前轮次的训练和验证的损失及准确率
         print(f"Epoch: {epoch+1} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc:.3f} | "
               f"Val Loss: {val_loss:.3f} | Val Acc: {val_acc:.3f}")
+
+
+def train_moon_2(model, train_data, lr, epochs):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+    train_loader = torch.utils.data.DataLoader(SentimentDataset(train_data), batch_size=2, shuffle=True)
+    optimizer = AdamW(model.parameters(), lr=lr)
+    criterion = torch.nn.CrossEntropyLoss()
+    for epoch in range(epochs):
+        model.train()
+        train_loss, train_correct = 0, 0
+        for batch in tqdm(train_loader, desc=f"Training Epoch {epoch+1}"):
+            optimizer.zero_grad()
+            input_ids, attention_mask, labels = (batch['input_ids'].squeeze(1).to(device),batch['attention_mask'].squeeze(1).to(device), batch['label'].to(device))
+            outputs = model(input_ids, attention_mask)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
+            train_correct += (outputs.argmax(dim=1) == labels).sum().item()
+        train_acc = train_correct / len(train_data)
+        torch.save(model.state_dict(), 'model/test_bert_cnn_moon_model_2.pth')
+        print(f"Epoch {epoch+1}: Train Loss {train_loss/len(train_loader):.3f} | Train Acc {train_acc:.3f}")
+

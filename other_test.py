@@ -1,29 +1,56 @@
 import pandas as pd
 import random
+import torch
 from transformers import BertModel, BertTokenizer
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 
-def read_data_txt():
-    data = []
-    with open('./data/tsinghua.negative.gb.txt', 'r', encoding='gbk') as nf:
-        for line in nf:
-            data.append([line.strip(), 'neg'])
+# 加载 BERT-base-Chinese 模型和分词器
+model_name = "bert-base-chinese"
+tokenizer = BertTokenizer.from_pretrained(model_name)
+model = BertModel.from_pretrained(model_name)
 
-    with open('./data/tsinghua.positive.gb.txt', 'r', encoding='gbk') as pf:
-        for line in pf:
-            data.append([line.strip(), 'pos'])
-    random.shuffle(data)
-    col = ['text', 'label']
-    data = pd.DataFrame(data)
-    data.columns = col
-    return data
+# 定义两句话
+sentence1 = "小米粥很好吃"
+sentence2 = "小米配馒头不好吃"
+
+# 分词并获取 token 索引
+inputs1 = tokenizer(sentence1, return_tensors="pt")
+inputs2 = tokenizer(sentence2, return_tensors="pt")
+
+# 计算 BERT 词向量
+with torch.no_grad():
+    outputs1 = model(**inputs1)
+    outputs2 = model(**inputs2)
+
+# 获取 tokenized 结果
+tokens1 = tokenizer.convert_ids_to_tokens(inputs1["input_ids"][0])
+tokens2 = tokenizer.convert_ids_to_tokens(inputs2["input_ids"][0])
+
+# 打印分词结果
+print(f"句子1 Tokenized: {tokens1}")
+print(f"句子2 Tokenized: {tokens2}")
+
+# 找到 '苹' 和 '果' 的索引
+idxs1 = [i for i, token in enumerate(tokens1) if token in ["小", "米"]]
+idxs2 = [i for i, token in enumerate(tokens2) if token in ["小", "米"]]
+
+# 提取'苹果'的词向量（如果有多个 token，则取均值）
+vector1 = torch.mean(outputs1.last_hidden_state[0, idxs1, :], dim=0)
+vector2 = torch.mean(outputs2.last_hidden_state[0, idxs2, :], dim=0)
+
+# 转换为 numpy 数组
+vector1 = vector1.numpy().reshape(1, -1)
+vector2 = vector2.numpy().reshape(1, -1)
+
+# 计算余弦相似度
+similarity = cosine_similarity(vector1, vector2)[0][0]
+
+# 输出结果
+print(f"余弦相似度: {similarity}")
 
 
-def read_data_xls():
-    df = pd.read_excel('./data/category_train.xls')
-    data = df.apply(lambda x: x.astype(str).str.replace(r'\d+', '', regex=True))
-    return data
 
 # path = './model/bert-base-chinese'
 # tokenizer = BertTokenizer.from_pretrained(path)
