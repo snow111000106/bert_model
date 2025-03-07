@@ -1,5 +1,9 @@
 from sympy.codegen.ast import integer
 
+"""
+力扣算法
+"""
+
 
 class ListNode:
     def __init__(self, val=0, next=None):
