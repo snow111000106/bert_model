@@ -1,10 +1,13 @@
 import torch
 import numpy as np
 from transformers import BertTokenizer
-from config import BERT_PATH, labels_moon, category_label
+from config import BERT_PATH, category_label
+from read_data import load_word2vec_model
+
 
 # 从预训练模型路径加载BERT分词器
 tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
+word2vec = load_word2vec_model()
 
 
 # 定义第一个数据集类 MyDataset，用于将DataFrame格式的数据转化为可迭代的Dataset
@@ -46,7 +49,7 @@ class MyDataset(torch.utils.data.Dataset):
 
 # 定义第二个数据集类 SentimentDataset，主要用于情感分析任务
 class SentimentDataset(torch.utils.data.Dataset):
-    def __init__(self, data, max_len=128):
+    def __init__(self, data, max_len=8):
         # 保存传入的数据
         self.data = data
         # 使用全局定义好的tokenizer
@@ -79,5 +82,44 @@ class SentimentDataset(torch.utils.data.Dataset):
         return {
             'input_ids': encoding['input_ids'].flatten(),        # 将input_ids展平为一维tensor
             'attention_mask': encoding['attention_mask'].flatten(),  # 将attention_mask展平为一维tensor
+            'label': torch.tensor(label, dtype=torch.long)
+        }
+
+
+class ForVecDataset(torch.utils.data.Dataset):
+    def __init__(self, data, max_len=8):
+        self.data = data
+        self.word2vec = word2vec
+        self.max_len = max_len
+        self.texts = data['text'].values
+        self.labels = data['label'].apply(lambda x: 1 if x == 'pos' else 0).values
+
+    def __len__(self):
+        return len(self.data)
+
+    def text_to_sequence(self, text):
+        # 分词（如果文本未分词，需要使用 jieba 分词）
+        words = text.split()  # 或者用 jieba.cut(text)
+
+        # 获取 Word2Vec 词向量索引
+        seq = [self.word2vec[word] if word in self.word2vec else np.zeros(300) for word in words]
+
+        # 填充或截断到 max_len
+        if len(seq) < self.max_len:
+            seq.extend([np.zeros(300)] * (self.max_len - len(seq)))  # 填充 0 向量
+        else:
+            seq = seq[:self.max_len]  # 截断
+
+        return np.array(seq)
+
+    def __getitem__(self, idx):
+        text = self.texts[idx]
+        label = self.labels[idx]
+
+        # 处理文本，转换为 Word2Vec 词向量序列
+        input_vector = self.text_to_sequence(text)
+
+        return {
+            'input_vectors': torch.tensor(input_vector, dtype=torch.float),
             'label': torch.tensor(label, dtype=torch.long)
         }

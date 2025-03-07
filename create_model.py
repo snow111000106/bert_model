@@ -37,33 +37,52 @@ class CNN_BERT_Model(nn.Module):
         # 定义1维卷积层：
         # 输入通道数为768（BERT的隐藏层维度），输出通道数为256，卷积核大小为3
         self.conv1 = nn.Conv1d(in_channels=768, out_channels=256, kernel_size=3)
-        # 定义Dropout层，用于防止过拟合
-        self.dropout = nn.Dropout(dropout)
         # 定义全连接层，将卷积后经过池化的特征映射到2个类别（二分类任务）
         self.fc = nn.Linear(256, 2)
 
     def forward(self, input_ids, attention_mask):
         # 通过BERT模型获取最后一层隐藏状态，输出形状为 [batch_size, seq_length, hidden_size]
         x = self.bert(input_ids, attention_mask=attention_mask)[0]
-        print(x)
 
         # 调整维度顺序，转换为 [batch_size, hidden_size, seq_length]，以便后续进行1D卷积
         x = x.permute(0, 2, 1)
-        print(x)
         # 通过1维卷积层提取局部特征，输出形状为 [batch_size, 256, L] (L取决于序列长度和卷积核大小)
         x = self.conv1(x)
-        print(x)
 
         # 采用全局最大池化，在序列维度上取最大值，得到形状 [batch_size, 256]
         x = torch.max(x, dim=2)[0]
-        print(x)
-
-        # 对池化后的特征应用Dropout
-        x = self.dropout(x)
-        print(x)
 
         # 通过全连接层得到最终的分类输出
         x = self.fc(x)
-        print(x)
+
+        return x
+
+
+class CNNVECModel(nn.Module):
+    def __init__(self, embedding_dim=300, output_dim=2):
+        super(CNNVECModel, self).__init__()
+        # 1D 卷积层，提取局部特征
+        self.conv1 = nn.Conv1d(in_channels=embedding_dim, out_channels=256, kernel_size=3)
+        self.conv2 = nn.Conv1d(in_channels=256, out_channels=128, kernel_size=3)
+
+        # 全局最大池化
+        self.pool = nn.AdaptiveMaxPool1d(1)
+
+        # 全连接分类层
+        self.fc = nn.Linear(128, output_dim)
+
+    def forward(self, input_vectors):
+        # input_vectors 形状：[batch_size, seq_length, embedding_dim]
+        x = input_vectors.permute(0, 2, 1)  # 转换为 [batch_size, embedding_dim, seq_length]
+
+        # 通过 CNN 提取特征
+        x = torch.relu(self.conv1(x))
+        x = torch.relu(self.conv2(x))
+
+        # 池化
+        x = self.pool(x).squeeze(2)  # 形状变为 [batch_size, 128]
+
+        # 分类
+        x = self.fc(x)
 
         return x

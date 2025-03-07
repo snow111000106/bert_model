@@ -8,7 +8,7 @@ from torch.optim import Adam
 from torch import nn
 from tqdm import tqdm
 from transformers import AdamW
-from dateset import MyDataset,SentimentDataset
+from dateset import MyDataset,SentimentDataset,ForVecDataset
 
 
 def train(model, train_data, val_data, learning_rate, epochs):
@@ -94,8 +94,8 @@ def train_moon(model, train_data, val_data, lr, epochs):
     val_dataset = SentimentDataset(val_data)
 
     # 创建 DataLoader，用于按批次加载数据，训练时设置 shuffle=True 打乱数据
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=2, shuffle=True)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=2)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=16)
 
     # 判断是否有可用的GPU，否则使用CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -121,11 +121,9 @@ def train_moon(model, train_data, val_data, lr, epochs):
             # 获取batch中的输入数据，并将其移动到设备上
             input_ids = batch['input_ids'].to(device)
             # 如果input_ids多了一个维度，则压缩掉（例如：[1, 1, seq_len] -> [1, seq_len]）
-            if input_ids.dim() == 3:
-                input_ids = input_ids.squeeze(1)
+            input_ids = input_ids.squeeze(1)
             attention_mask = batch['attention_mask'].to(device)
-            if attention_mask.dim() == 3:
-                attention_mask = attention_mask.squeeze(1)
+            attention_mask = attention_mask.squeeze(1)
             labels = batch['label'].to(device)
 
             # 前向传播：传入input_ids和attention_mask，获得模型输出
@@ -150,11 +148,9 @@ def train_moon(model, train_data, val_data, lr, epochs):
         with torch.no_grad():
             for batch in val_dataloader:
                 input_ids = batch['input_ids'].to(device)
-                if input_ids.dim() == 3:
-                    input_ids = input_ids.squeeze(1)
+                input_ids = input_ids.squeeze(1)
                 attention_mask = batch['attention_mask'].to(device)
-                if attention_mask.dim() == 3:
-                    attention_mask = attention_mask.squeeze(1)
+                attention_mask = attention_mask.squeeze(1)
                 labels = batch['label'].to(device)
 
                 # 前向传播获取验证结果
@@ -177,25 +173,39 @@ def train_moon(model, train_data, val_data, lr, epochs):
               f"Val Loss: {val_loss:.3f} | Val Acc: {val_acc:.3f}")
 
 
-def train_moon_2(model, train_data, lr, epochs):
+def train_moon_for_vec(model, train_data, lr, epochs):
+    # 创建数据集
+    train_dataset = ForVecDataset(train_data)
+
+    # 加载数据
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True)
+    # 设备
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model.to(device)
-    train_loader = torch.utils.data.DataLoader(SentimentDataset(train_data), batch_size=2, shuffle=True)
-    optimizer = AdamW(model.parameters(), lr=lr)
+
+    # 初始化模型
+    model = model.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.CrossEntropyLoss()
+
+    # 训练循环
     for epoch in range(epochs):
         model.train()
-        train_loss, train_correct = 0, 0
-        for batch in tqdm(train_loader, desc=f"Training Epoch {epoch+1}"):
+        total_loss = 0
+        for batch in train_dataloader:
             optimizer.zero_grad()
-            input_ids, attention_mask, labels = (batch['input_ids'].squeeze(1).to(device),batch['attention_mask'].squeeze(1).to(device), batch['label'].to(device))
-            outputs = model(input_ids, attention_mask)
+
+            input_vectors = batch['input_vectors'].to(device)
+            labels = batch['label'].to(device)
+
+            outputs = model(input_vectors)
             loss = criterion(outputs, labels)
+
             loss.backward()
             optimizer.step()
-            train_loss += loss.item()
-            train_correct += (outputs.argmax(dim=1) == labels).sum().item()
-        train_acc = train_correct / len(train_data)
-        torch.save(model.state_dict(), 'model/test_bert_cnn_moon_model_2.pth')
-        print(f"Epoch {epoch+1}: Train Loss {train_loss/len(train_loader):.3f} | Train Acc {train_acc:.3f}")
+
+            total_loss += loss.item()
+
+        print(f"Epoch {epoch + 1} - Loss: {total_loss:.3f}")
+        torch.save(model.state_dict(), 'model/test_vec_cnn_moon_model_2.pth')
+
 

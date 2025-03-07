@@ -4,7 +4,7 @@
 # @File    : evaluate.py
 
 import torch
-from dateset import MyDataset, SentimentDataset
+from dateset import MyDataset, SentimentDataset, ForVecDataset
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
@@ -150,30 +150,44 @@ def evaluate_moon(model, test_data):
     print(f'F1 Score: {f1:.3f}')
 
 
-def evaluate_moon_2(model, test_data):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 选择设备
-    model.to(device)  # 加载模型到设备
-    model.eval()  # 设为评估模式
+def evaluate_moon_for_vec(model, test_data):
+    test_dataset = ForVecDataset(test_data)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=2)
 
-    test_loader = torch.utils.data.DataLoader(SentimentDataset(test_data), batch_size=2)  # 创建测试数据加载器
-    criterion = torch.nn.CrossEntropyLoss()  # 交叉熵损失函数
-    test_loss, test_correct = 0, 0  # 初始化损失和正确预测计数
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
 
-    with torch.no_grad():  # 关闭梯度计算
-        for batch in test_loader:
-            input_ids, attention_mask, labels = (
-                batch['input_ids'].squeeze(1).to(device),
-                batch['attention_mask'].squeeze(1).to(device),
-                batch['label'].to(device)
-            )
+    total_acc_test = 0
+    y_true, y_scores, y_preds = [], [], []
 
-            outputs = model(input_ids, attention_mask)  # 前向传播
-            test_loss += criterion(outputs, labels).item()  # 计算损失
-            test_correct += (outputs.argmax(dim=1) == labels).sum().item()  # 计算正确预测数
+    with torch.no_grad():
+        for batch in tqdm(test_dataloader, desc="Evaluating"):
+            text_vectors = batch['input_vectors'].to(device)
+            labels = batch['label'].to(device)
 
-    test_acc = test_correct / len(test_data)  # 计算测试集准确率
-    print(f"Test Loss: {test_loss / len(test_loader):.3f} | Test Acc: {test_acc:.3f}")
-    return test_loss / len(test_loader), test_acc
+            output = model(text_vectors)  # 直接输入 Word2Vec 向量
+
+            correct = (output.argmax(dim=1) == labels).sum().item()
+            total_acc_test += correct
+
+            probs = torch.softmax(output, dim=1)[:, 1].cpu().numpy()
+            y_scores.extend(probs.tolist())
+            y_true.extend(labels.cpu().numpy().tolist())
+            y_preds.extend(output.argmax(dim=1).cpu().numpy().tolist())
+
+    test_accuracy = total_acc_test / len(test_dataset)
+    print(f'Test Accuracy: {test_accuracy:.3f}')
+
+    cm = confusion_matrix(y_true, y_preds)
+    precision = precision_score(y_true, y_preds, average='macro')
+    recall = recall_score(y_true, y_preds, average='macro')
+    f1 = f1_score(y_true, y_preds, average='macro')
+
+    print(f'Confusion Matrix:\n{cm}')
+    print(f'Precision: {precision:.3f}')
+    print(f'Recall: {recall:.3f}')
+    print(f'F1 Score: {f1:.3f}')
+
 
 
 

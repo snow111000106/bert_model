@@ -11,8 +11,3 @@ category_label = {'login': 0,
                   'runTask': 8,
                   'unitTest': 9
                   }
-
-labels_moon = {
-            'neg': 0,
-            'pos': 1
-        }
