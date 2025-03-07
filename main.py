@@ -126,7 +126,7 @@ def run_vec_train(types):
 
     elif types == 'evaluate':
         from evaluate import evaluate_moon_for_vec
-        model.load_state_dict(torch.load('./model/test_vec_cnn_moon_model_2.pth'))
+        model.load_state_dict(torch.load('./model/test_vec_cnn_moon_model.pth'))
         evaluate_moon_for_vec(model, df_test)
 
     elif types == 'test':

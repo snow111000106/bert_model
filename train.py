@@ -206,6 +206,6 @@ def train_moon_for_vec(model, train_data, lr, epochs):
             total_loss += loss.item()
 
         print(f"Epoch {epoch + 1} - Loss: {total_loss:.3f}")
-        torch.save(model.state_dict(), 'model/test_vec_cnn_moon_model_2.pth')
+        torch.save(model.state_dict(), 'model/test_vec_cnn_moon_model.pth')
 
 
