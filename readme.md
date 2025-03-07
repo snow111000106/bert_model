@@ -1,5 +1,5 @@
 cnn模型训练
-1:run_mon_train基于bert的短文本情感分类
+1:run_emotion_train基于bert的短文本情感分类
 2:run_vec_train基于word2Vec的短文本情感分类
 3:run_category_train基于bert的短语分类，用于执行对应的指令
 

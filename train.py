@@ -166,7 +166,7 @@ def train_moon(model, train_data, val_data, lr, epochs):
         # 如果本轮验证准确率更高，则保存当前模型参数
         if total_acc_val > best_val_acc:
             best_val_acc = total_acc_val
-            torch.save(model.state_dict(), 'model/test_bert_cnn_moon_model.pth')
+            torch.save(model.state_dict(), 'model/test_bert_cnn_emotion_model.pth')
 
         # 打印当前轮次的训练和验证的损失及准确率
         print(f"Epoch: {epoch+1} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc:.3f} | "
@@ -206,6 +206,6 @@ def train_moon_for_vec(model, train_data, lr, epochs):
             total_loss += loss.item()
 
         print(f"Epoch {epoch + 1} - Loss: {total_loss:.3f}")
-        torch.save(model.state_dict(), 'model/test_vec_cnn_moon_model.pth')
+        torch.save(model.state_dict(), 'model/test_vec_cnn_emotion_model.pth')
 
 

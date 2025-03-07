@@ -58,7 +58,7 @@ def run_category_train(types):
         print(re)
 
 
-def run_mon_train(types):
+def run_emotion_train(types):
     from create_model import CNN_BERT_Model
     data = read_data.read_data_txt()
     df_train, df_val, df_test = np.split(data.sample(frac=1, random_state=42),
@@ -76,14 +76,14 @@ def run_mon_train(types):
     elif types == 'evaluate':
         from evaluate import evaluate_moon
 
-        model.load_state_dict(torch.load('./model/test_bert_cnn_moon_model.pth'))
+        model.load_state_dict(torch.load('model/test_bert_cnn_emotion_model.pth'))
         evaluate_moon(model, df_test)
 
     elif types == 'test':
         # 单个测试
 
         tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
-        model.load_state_dict(torch.load('./model/test_bert_cnn_moon_model.pth'))
+        model.load_state_dict(torch.load('model/test_bert_cnn_emotion_model.pth'))
         data = '这个水果手机的系统很流畅。'
         bert_input = tokenizer(data, padding='max_length', max_length=64, truncation=True, return_tensors="pt")
         mask = bert_input['attention_mask'].to('cpu')
@@ -126,13 +126,13 @@ def run_vec_train(types):
 
     elif types == 'evaluate':
         from evaluate import evaluate_moon_for_vec
-        model.load_state_dict(torch.load('./model/test_vec_cnn_moon_model.pth'))
+        model.load_state_dict(torch.load('model/test_vec_cnn_emotion_model.pth'))
         evaluate_moon_for_vec(model, df_test)
 
     elif types == 'test':
         # 单个测试
         # 将模型和输入数据移到相同的设备
-        model.load_state_dict(torch.load('./model/test_vec_cnn_moon_model.pth'))
+        model.load_state_dict(torch.load('model/test_vec_cnn_emotion_model.pth'))
         model.eval()
         word2vec = read_data.load_word2vec_model()
         data = '太坏了'
