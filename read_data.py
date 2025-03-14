@@ -5,8 +5,8 @@ import pickle
 from gensim.models import KeyedVectors
 
 
-cache_file_path = 'model/word2vec/word2vec_cache.pkl'
-word2vec_path = 'model/word2vec/cc.zh.300.vec.gz'
+cache_file_path = 'model/FastText/word2vec_cache.pkl'
+word2vec_path = 'model/FastText/cc.zh.300.vec.gz'
 
 
 def load_word2vec_model():
