@@ -33,7 +33,8 @@ def run_category_train(types):
     # print(df.info(verbose=True, show_counts=True))
 
     model = BertClassifier()
-
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
     if types == 'train':
         from train import train
 
