@@ -5,6 +5,8 @@ from config import BERT_PATH
 import read_data
 from transformers import BertTokenizer
 import logging
+from transformers import AutoTokenizer
+from transformers import AutoModel
 
 # loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
 # for logger in loggers:
@@ -29,7 +31,8 @@ def run_category_train(types):
     # print(df_train.iloc[17197])
     # print(df['rating'].unique())
     # print(df.info(verbose=True, show_counts=True))
-    model = BertClassifier(bert_path=BERT_PATH)
+
+    model = BertClassifier()
 
     if types == 'train':
         from train import train
@@ -46,13 +49,15 @@ def run_category_train(types):
 
     elif types == 'test':
         # 单个测试
-        tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
-        model = BertClassifier(bert_path=BERT_PATH)
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
+        #tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
+        #model = BertClassifier(bert_path=BERT_PATH)
+        #model= AutoModel.from_pretrained("bert-base-chinese")
         model.load_state_dict(torch.load('./model/test_bert_category_model.pth'))
-        data = '清掉缓存数据'
+        data = '\'清掉缓存数据\''
         bert_input = tokenizer(data, padding='max_length', max_length=64, truncation=True, return_tensors="pt")
-        mask = bert_input['attention_mask'].to('cpu')
-        input_id = bert_input['input_ids'].squeeze(1).to('cpu')
+        mask = bert_input['attention_mask'].to('cuda' if torch.cuda.is_available() else 'cpu')
+        input_id = bert_input['input_ids'].squeeze(1).to('cuda' if torch.cuda.is_available() else 'cpu')
         out = model(input_id, mask)
         re = out.argmax(dim=1).item()
         print(re)
@@ -63,8 +68,8 @@ def run_emotion_train(types):
     data = read_data.read_data_txt()
     df_train, df_val, df_test = np.split(data.sample(frac=1, random_state=42),
                                          [int(.7 * len(data)), int(.8 * len(data))])
-
-    model = CNN_BERT_Model(bert_path=BERT_PATH)
+    print('cuda' if torch.cuda.is_available() else 'cpu')
+    model = CNN_BERT_Model()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
@@ -82,12 +87,13 @@ def run_emotion_train(types):
     elif types == 'test':
         # 单个测试
 
-        tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
+        #tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
         model.load_state_dict(torch.load('model/test_bert_cnn_emotion_model.pth'))
         data = '这个水果手机的系统很流畅。'
         bert_input = tokenizer(data, padding='max_length', max_length=64, truncation=True, return_tensors="pt")
-        mask = bert_input['attention_mask'].to('cpu')
-        input_id = bert_input['input_ids'].squeeze(1).to('cpu')
+        mask = bert_input['attention_mask'].to('cuda' if torch.cuda.is_available() else 'cpu')
+        input_id = bert_input['input_ids'].squeeze(1).to('cuda' if torch.cuda.is_available() else 'cpu')
 
         out = model(input_id, mask)
         moon = out.argmax(dim=1).item()
@@ -110,57 +116,58 @@ def run_emotion_train(types):
         #     print(f"Token ID: {tid}, 词向量：", embeddings[tid])
 
 
-def run_vec_train(types):
-    from create_model import CNNVECModel
-    data = read_data.read_data_txt()
-    df_train, df_test = np.split(data.sample(frac=1, random_state=42),
-                                 [int(.9 * len(data))])  # 90% 训练集, 10% 测试集
-    model = CNNVECModel()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
-
-    if types == 'train':
-        from train import train_moon_for_vec
-        LR = 1e-6
-        train_moon_for_vec(model, df_train, LR, 100)
-
-    elif types == 'evaluate':
-        from evaluate import evaluate_moon_for_vec
-        model.load_state_dict(torch.load('model/test_vec_cnn_emotion_model.pth'))
-        evaluate_moon_for_vec(model, df_test)
-
-    elif types == 'test':
-        # 单个测试
-        # 将模型和输入数据移到相同的设备
-        model.load_state_dict(torch.load('model/test_vec_cnn_emotion_model.pth'))
-        model.eval()
-        word2vec = read_data.load_word2vec_model()
-        data = '太坏了'
-        words = data.split()
-        word_vectors = [word2vec[word] if word in word2vec else np.zeros(300) for word in words]
-        max_len = 8  # 假设最大长度为64
-        # word_vectors = word_vectors[:max_len]  # 截断
-        word_vectors += [np.zeros(300)] * (max_len - len(word_vectors))  # 填充
-        word_vectors_np = np.array(word_vectors)
-
-        # 4. 转换为Tensor
-        input_vectors = torch.tensor(word_vectors_np).unsqueeze(0).float()  # 增加batch维度
-        input_vectors = input_vectors.to(device)
-        # 5. 执行前向传播
-        with torch.no_grad():  # 在推理时禁用梯度计算
-            out = model(input_vectors)
-
-        # 6. 获取预测结果
-        prediction = out.argmax(dim=1).item()
-        # 打印预测结果
-        print("Predicted label:", prediction)
+# def run_vec_train(types):
+#     from create_model import CNNVECModel
+#     data = read_data.read_data_txt()
+#     df_train, df_test = np.split(data.sample(frac=1, random_state=42),
+#                                  [int(.9 * len(data))])  # 90% 训练集, 10% 测试集
+#     model = CNNVECModel()
+#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#     model = model.to(device)
+#
+#     if types == 'train':
+#         from train import train_moon_for_vec
+#         LR = 1e-6
+#         train_moon_for_vec(model, df_train, LR, 100)
+#
+#     elif types == 'evaluate':
+#         from evaluate import evaluate_moon_for_vec
+#         model.load_state_dict(torch.load('model/test_vec_cnn_emotion_model.pth'))
+#         evaluate_moon_for_vec(model, df_test)
+#
+#     elif types == 'test':
+#         # 单个测试
+#         # 将模型和输入数据移到相同的设备
+#         model.load_state_dict(torch.load('model/test_vec_cnn_emotion_model.pth'))
+#         model.eval()
+#         word2vec = read_data.load_word2vec_model()
+#         data = '太坏了'
+#         words = data.split()
+#         word_vectors = [word2vec[word] if word in word2vec else np.zeros(300) for word in words]
+#         max_len = 8  # 假设最大长度为64
+#         # word_vectors = word_vectors[:max_len]  # 截断
+#         word_vectors += [np.zeros(300)] * (max_len - len(word_vectors))  # 填充
+#         word_vectors_np = np.array(word_vectors)
+#
+#         # 4. 转换为Tensor
+#         input_vectors = torch.tensor(word_vectors_np).unsqueeze(0).float()  # 增加batch维度
+#         input_vectors = input_vectors.to(device)
+#         # 5. 执行前向传播
+#         with torch.no_grad():  # 在推理时禁用梯度计算
+#             out = model(input_vectors)
+#
+#         # 6. 获取预测结果
+#         prediction = out.argmax(dim=1).item()
+#         # 打印预测结果
+#         print("Predicted label:", prediction)
 
 
 if __name__ == '__main__':
 
-    # read_data.load_word2vec_model()
 
-    run_vec_train(types='evaluate')
+    # read_data.load_word2vec_model()
+    run_category_train(types = 'test')
+    #run_vec_train(types='evaluate')
 
 
 

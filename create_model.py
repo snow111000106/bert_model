@@ -1,13 +1,14 @@
 from torch import nn
 from transformers import BertModel
 import torch
-
+from transformers import AutoModel
 
 class BertClassifier(nn.Module):
-    def __init__(self, bert_path, dropout=0.3):
+    def __init__(self, dropout=0.3):
         super(BertClassifier, self).__init__()
         # 加载预训练的BERT模型
-        self.bert = BertModel.from_pretrained(bert_path)
+        #self.bert = BertModel.from_pretrained(bert_path)
+        self.bert = AutoModel.from_pretrained("bert-base-chinese")
         # 定义Dropout层，用于防止过拟合
         self.dropout = nn.Dropout(dropout)
         # 定义全连接层，将BERT的768维输出映射到10个类别（例如10分类任务）
@@ -30,10 +31,11 @@ class BertClassifier(nn.Module):
 
 
 class CNN_BERT_Model(nn.Module):
-    def __init__(self, bert_path, dropout=0.5):
+    def __init__(self, dropout=0.5):
         super(CNN_BERT_Model, self).__init__()
         # 加载预训练的BERT模型
-        self.bert = BertModel.from_pretrained(bert_path)
+        #self.bert = BertModel.from_pretrained("bert-base-chinese")
+        self.bert = AutoModel.from_pretrained("bert-base-chinese")
         # 定义1维卷积层：
         # 输入通道数为768（BERT的隐藏层维度），输出通道数为256，卷积核大小为3
         self.conv1 = nn.Conv1d(in_channels=768, out_channels=256, kernel_size=3)
@@ -58,31 +60,31 @@ class CNN_BERT_Model(nn.Module):
         return x
 
 
-class CNNVECModel(nn.Module):
-    def __init__(self, embedding_dim=300, output_dim=2):
-        super(CNNVECModel, self).__init__()
-        # 1D 卷积层，提取局部特征
-        self.conv1 = nn.Conv1d(in_channels=embedding_dim, out_channels=256, kernel_size=3)
-        self.conv2 = nn.Conv1d(in_channels=256, out_channels=128, kernel_size=3)
-
-        # 全局最大池化
-        self.pool = nn.AdaptiveMaxPool1d(1)
-
-        # 全连接分类层
-        self.fc = nn.Linear(128, output_dim)
-
-    def forward(self, input_vectors):
-        # input_vectors 形状：[batch_size, seq_length, embedding_dim]
-        x = input_vectors.permute(0, 2, 1)  # 转换为 [batch_size, embedding_dim, seq_length]
-
-        # 通过 CNN 提取特征
-        x = torch.relu(self.conv1(x))
-        x = torch.relu(self.conv2(x))
-
-        # 池化
-        x = self.pool(x).squeeze(2)  # 形状变为 [batch_size, 128]
-
-        # 分类
-        x = self.fc(x)
-
-        return x
+# class CNNVECModel(nn.Module):
+#     def __init__(self, embedding_dim=300, output_dim=2):
+#         super(CNNVECModel, self).__init__()
+#         # 1D 卷积层，提取局部特征
+#         self.conv1 = nn.Conv1d(in_channels=embedding_dim, out_channels=256, kernel_size=3)
+#         self.conv2 = nn.Conv1d(in_channels=256, out_channels=128, kernel_size=3)
+#
+#         # 全局最大池化
+#         self.pool = nn.AdaptiveMaxPool1d(1)
+#
+#         # 全连接分类层
+#         self.fc = nn.Linear(128, output_dim)
+#
+#     def forward(self, input_vectors):
+#         # input_vectors 形状：[batch_size, seq_length, embedding_dim]
+#         x = input_vectors.permute(0, 2, 1)  # 转换为 [batch_size, embedding_dim, seq_length]
+#
+#         # 通过 CNN 提取特征
+#         x = torch.relu(self.conv1(x))
+#         x = torch.relu(self.conv2(x))
+#
+#         # 池化
+#         x = self.pool(x).squeeze(2)  # 形状变为 [batch_size, 128]
+#
+#         # 分类
+#         x = self.fc(x)
+#
+#         return x

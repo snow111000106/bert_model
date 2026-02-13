@@ -3,11 +3,12 @@ import numpy as np
 from transformers import BertTokenizer
 from config import BERT_PATH, category_label
 from read_data import load_word2vec_model
-
+from transformers import AutoTokenizer
 
 # 从预训练模型路径加载BERT分词器
-tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
-word2vec = load_word2vec_model()
+#tokenizer = BertTokenizer.from_pretrained(BERT_PATH)
+tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
+#word2vec = load_word2vec_model()
 
 
 # 定义第一个数据集类 MyDataset，用于将DataFrame格式的数据转化为可迭代的Dataset
